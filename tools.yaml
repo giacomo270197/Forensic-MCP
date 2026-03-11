@@ -109,13 +109,3 @@ tools:
       JSON. Useful for identifying lateral movement and remote service usage
       on Windows Server systems.
 
-  - name: WindowsDefender
-    mcp_tool: run_defender_scan
-    module: defender
-    executable: "powershell"
-    description: >
-      Triggers a Windows Defender antivirus scan (full system or custom path)
-      and returns a job_id immediately. Poll get_job_status(job_id) to check
-      when the scan completes, then call get_defender_report() to retrieve
-      any threats detected. Requires PowerShell and Windows Defender to be
-      present and enabled on the target system.

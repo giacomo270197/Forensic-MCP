@@ -103,9 +103,6 @@ async def run_cmd_async(
     return {
         "success":    proc.returncode == 0,
         "returncode": proc.returncode,
-        #"stdout":     stdout_data.decode(errors="replace").strip(),
-        "stderr":     "".join(stderr_lines).strip(),
-        "command":    cmd_str,
     }
 
 
