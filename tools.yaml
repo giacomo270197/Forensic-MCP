@@ -1,0 +1,121 @@
+tools:
+  - name: Hayabusa
+    mcp_tool: run_hayabusa
+    executable: "hayabusa/hayabusa.exe"
+    description: >
+      Parses Windows Event Log (.evtx) files or directories and exports
+      a CSV timeline with security findings. Useful for analysing Security, System,
+      Application, and custom channel logs.
+
+  - name: PECmd
+    mcp_tool: run_pecmd
+    executable: "net9/PECmd.exe"
+    description: >
+      Parses Windows Prefetch (.pf) files or directories and exports
+      execution metadata (run counts, timestamps, loaded files) to CSV
+      or JSON. Useful for establishing program execution history.
+
+  - name: RECmd
+    mcp_tool: run_recmd
+    executable: "net9/RECmd/RECmd.exe"
+    description: >
+      Parses Windows Registry hive files and extracts key/value data
+      using optional batch (.reb) definition files. Useful for recovering
+      user activity, persistence mechanisms, and system configuration.
+
+  - name: AmcacheParser
+    mcp_tool: run_amcacheparser
+    executable: "net9/AmcacheParser.exe"
+    description: >
+      Parses the Windows Amcache.hve registry hive and exports application
+      execution and file metadata (SHA1 hashes, install dates, paths) to CSV
+      or JSON. Useful for identifying recently executed programs and installed
+      applications.
+
+  - name: AppCompatCacheParser
+    mcp_tool: run_appcompatcacheparser
+    executable: "net9/AppCompatCacheParser.exe"
+    description: >
+      Extracts Shimcache (AppCompatCache) entries from a SYSTEM registry hive
+      and exports them to CSV or JSON. Useful for reconstructing program
+      execution history and identifying files that were present on the system.
+
+  - name: JLECmd
+    mcp_tool: run_jlecmd
+    executable: "net9/JLECmd.exe"
+    description: >
+      Parses Windows Jump List files (.automaticDestinations-ms and
+      .customDestinations-ms) and exports LNK entry metadata to CSV or JSON.
+      Useful for recovering recently and frequently accessed files and
+      applications per user.
+
+  - name: LECmd
+    mcp_tool: run_lecmd
+    executable: "net9/LECmd.exe"
+    description: >
+      Parses Windows LNK shortcut (.lnk) files and exports metadata including
+      target paths, timestamps, volume information, and network share details
+      to CSV or JSON. Useful for identifying accessed files and mapped drives.
+
+  - name: MFTECmd
+    mcp_tool: run_mftecmd
+    executable: "net9/MFTECmd.exe"
+    description: >
+      Parses NTFS filesystem artefacts ($MFT, $Boot, $J, $LogFile, $SDS,
+      $I30) and exports file system metadata including deleted files,
+      timestamps, and journal entries to CSV or JSON. Useful for filesystem
+      timeline analysis and file recovery.
+
+  - name: RBCmd
+    mcp_tool: run_rbcmd
+    executable: "net9/RBCmd.exe"
+    description: >
+      Parses Windows Recycle Bin $I metadata files and exports deleted file
+      information (original path, deletion timestamp, file size) to CSV or
+      JSON. Useful for recovering evidence of deliberate file deletion.
+
+  - name: RecentFileCacheParser
+    mcp_tool: run_recentfilecacheparser
+    executable: "net9/RecentFileCacheParser.exe"
+    description: >
+      Parses the RecentFileCache.bcf file found on Windows XP through 7
+      systems and exports program execution evidence to CSV or JSON. Useful
+      as a lightweight alternative to Amcache on older Windows versions.
+
+  - name: SBECmd
+    mcp_tool: run_sbecmd
+    executable: "net9/SBECmd.exe"
+    description: >
+      Parses Windows Shell Bag entries from UsrClass.dat hive files and
+      exports folder access and navigation history to CSV or JSON. Useful
+      for reconstructing user activity and identifying accessed directories,
+      including those on removable media and network shares.
+
+  - name: SrumECmd
+    mcp_tool: run_srumecmd
+    executable: "net9/SrumECmd.exe"
+    description: >
+      Parses the Windows System Resource Usage Monitor (SRUM) database
+      (SRUDB.dat) and exports network usage, application resource consumption,
+      and energy telemetry to CSV or JSON. Useful for establishing which
+      applications ran, when, and how much data they transferred.
+
+  - name: SumECmd
+    mcp_tool: run_sumecmd
+    executable: "net9/SumECmd.exe"
+    description: >
+      Parses Windows User Access Logging (UAL) database files from the SUM
+      directory and exports remote access records (RDP, SMB, IIS) to CSV or
+      JSON. Useful for identifying lateral movement and remote service usage
+      on Windows Server systems.
+
+  - name: WindowsDefender
+    mcp_tool: run_defender_scan
+    module: defender
+    executable: "powershell"
+    description: >
+      Triggers a Windows Defender antivirus scan (full system or custom path)
+      and returns a job_id immediately. Poll get_job_status(job_id) to check
+      when the scan completes, then call get_defender_report() to retrieve
+      any threats detected. Requires PowerShell and Windows Defender to be
+      present and enabled on the target system.

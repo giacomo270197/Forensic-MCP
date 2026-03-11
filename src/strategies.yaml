@@ -1,0 +1,22 @@
+strategies:
+
+  windows:
+    description: "Full Windows endpoint investigation"
+    text: |
+      Each step should provide you with data points to refine your searches and ask yourself more pertinent questions.
+
+      Firstly, run a Defender scan against the mounted evidence, to get a quick idea of where malware is and what level 
+      of access the Threat Actor (TA) acheived.
+
+      Then, move on to the event logs (EVTX). These can give you an idea of what accounts were compromised, when, and how. 
+      At this point you are looking for suspicious user behaviors, and how far back they go.
+
+      Once you know what accounts were compromised, you can move and and determine what these accounts did. You can use
+      available process execution artefacts to determine which software they used, and file access artefacts to determine
+      which files were interacted with.
+
+      Unless you already did, now it's time to look for persistence. Review the most common persistence mechanisms. Base your
+      searches on your previous findings. Only look at which persistence is plausible given the actions taken by the TA.
+
+      Finally, you want to look for lateral movement. You can go back to the event logs for outbound connections and authentications, 
+      for example, or executions of remote access software (SSH, PuTTY, mstsc.exe, ...)

@@ -1,0 +1,4 @@
+.output/*
+!.output/
+.claude
+.vscode
