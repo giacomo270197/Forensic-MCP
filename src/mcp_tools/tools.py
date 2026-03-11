@@ -27,22 +27,6 @@ from ._questions import question_queue
 from ._runner import run_cmd_async
 from ._utils import infer_create_table_from_csv, remove_prefix_timestamp
 
-
-# ---------------------------------------------------------------------------
-# Shared helper
-# ---------------------------------------------------------------------------
-
-def _progress_cb(ctx: Context):
-    """Return an async stderr-line callback, or None when ctx is absent."""
-    if ctx is None:
-        return None
-
-    async def _cb(line: str) -> None:
-        await ctx.report_progress(50, 100, line.strip())
-
-    return _cb
-
-
 # ---------------------------------------------------------------------------
 # Public factory
 # ---------------------------------------------------------------------------

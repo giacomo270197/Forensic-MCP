@@ -13,8 +13,8 @@ async def main():
 
         # List available operations
         #tools = await client.list_tools()
-        result = await client.call_tool("run_hayabusa", {"path": "G:\\Windows\\System32\\winevt\\Logs"})
-        #result = await client.call_tool("get_job_status", {"job_id": "be63c836"})
+        #result = await client.call_tool("windows_full_disk", {"path": "G:"})
+        result = await client.call_tool("get_job_status", {"job_id": "4f8d1588"})
         print(result)
 
 asyncio.run(main())
