@@ -65,7 +65,7 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             out.mkdir(parents=True, exist_ok=True)
             subtasks["run_hayabusa"] = asyncio.create_task(_run_tool(
                 "run_hayabusa",
-                [str(_get_exe("Hayabusa")), "csv-timeline", "-d", str(Path(path / "Windows/Sytem32/winevt/Logs")),
+                [str(_get_exe("Hayabusa")), "csv-timeline", "-d", str(Path(path)/ "Windows/System32/winevt/Logs"),
                  "-w", "-U", "-o", str(out / "evtx_hayabusa.csv")],
                 out,
             ))
@@ -76,7 +76,7 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             subtasks["run_pecmd"] = asyncio.create_task(_run_tool(
                 "run_pecmd",
                 [str(_get_exe("PECmd")),
-                 "-f" if Path(path).is_file() else "-d", str(Path(path / "Windows/Prefetch")),
+                 "-f" if Path(path).is_file() else "-d", str(Path(path)/ "Windows/Prefetch"),
                  "--csv", str(out)],
                 out,
             ))
@@ -85,6 +85,7 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             # Each invocation gets its own subdirectory so _csv_to_sqlite
             # only ingests that invocation's CSVs, avoiding double-ingest.
             recmd_exe = str(_get_exe("RECmd"))
+            recmd_batch = str(tools_dir / "net9/RECmd/BatchExamples/Kroll_Batch.reb")
             recmd_base = output_dir / "recmd"
             recmd_base.mkdir(parents=True, exist_ok=True)
 
@@ -94,7 +95,7 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             subtasks["run_recmd_system"] = asyncio.create_task(_run_tool(
                 "run_recmd_system",
                 [recmd_exe, "-d", str(Path(path) / "Windows/System32/config"),
-                 "--csv", str(sys_hives_out)],
+                 "--bn", recmd_batch, "--csv", str(sys_hives_out)],
                 sys_hives_out,
             ))
 
@@ -114,7 +115,8 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
                         u_out.mkdir(parents=True, exist_ok=True)
                         subtasks[key] = asyncio.create_task(_run_tool(
                             key,
-                            [recmd_exe, "-f", str(ntuser), "--csv", str(u_out)],
+                            [recmd_exe, "-f", str(ntuser),
+                             "--bn", recmd_batch, "--csv", str(u_out)],
                             u_out,
                         ))
 
@@ -125,7 +127,8 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
                         u_out.mkdir(parents=True, exist_ok=True)
                         subtasks[key] = asyncio.create_task(_run_tool(
                             key,
-                            [recmd_exe, "-f", str(usrclass), "--csv", str(u_out)],
+                            [recmd_exe, "-f", str(usrclass),
+                             "--bn", recmd_batch, "--csv", str(u_out)],
                             u_out,
                         ))
 
@@ -134,7 +137,7 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             out.mkdir(parents=True, exist_ok=True)
             subtasks["run_amcacheparser"] = asyncio.create_task(_run_tool(
                 "run_amcacheparser",
-                [str(_get_exe("AmcacheParser")), "-f", str(Path(path / "Windows/AppCompat/Programs/Amcache.hve")),
+                [str(_get_exe("AmcacheParser")), "-f", str(Path(path)/ "Windows/AppCompat/Programs/Amcache.hve"),
                  "--csv", str(out)],
                 out,
             ))
@@ -144,7 +147,7 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             out.mkdir(parents=True, exist_ok=True)
             subtasks["run_appcompatcacheparser"] = asyncio.create_task(_run_tool(
                 "run_appcompatcacheparser",
-                [str(_get_exe("AppCompatCacheParser")), "-f", str(Path(path / "Windows/System32/config/SYSTEM")),
+                [str(_get_exe("AppCompatCacheParser")), "-f", str(Path(path)/ "Windows/System32/config/SYSTEM"),
                  "--csv", str(out)],
                 out,
             ))
@@ -251,7 +254,7 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             subtasks["run_rbcmd"] = asyncio.create_task(_run_tool(
                 "run_rbcmd",
                 [str(_get_exe("RBCmd")),
-                 "-f" if Path(path).is_file() else "-d", str(Path(path / "/$Recycle.Bin")),
+                 "-f" if Path(path).is_file() else "-d", str(Path(path)/ "/$Recycle.Bin"),
                  "--csv", str(out)],
                 out,
             ))
@@ -311,14 +314,42 @@ def register_tools(mcp, output_dir, tools_config, tools_dir) -> FastMCP:
             ))
 
             # Collect results ------------------------------------------------
-            results: dict = {}
+            succeeded: list[str] = []
+            failed: dict[str, str] = {}
+            all_tables: list[str] = []
+
+            def _collect(tool_name: str, info: dict) -> None:
+                """Recursively collect success/tables from a result dict."""
+                if "success" in info:
+                    # Leaf result from _run_tool / run_cmd_async
+                    if info.get("success", False):
+                        succeeded.append(tool_name)
+                    else:
+                        failed[tool_name] = info.get("error") or f"returncode={info.get('returncode')}"
+                    all_tables.extend(info.get("created_tables") or [])
+                else:
+                    # Nested dict (e.g. run_mftecmd -> {rawcopy_mft, mftecmd_mft, ...})
+                    for sub_name, sub_info in info.items():
+                        if isinstance(sub_info, dict):
+                            _collect(sub_name, sub_info)
+
             for name, task in subtasks.items():
                 try:
-                    results.update(await task)
+                    tool_result: dict = await task
+                    # tool_result is always {tool_name: result_dict}
+                    for tool_name, info in tool_result.items():
+                        if isinstance(info, dict):
+                            _collect(tool_name, info)
                 except Exception as exc:
-                    results[name] = {"success": False, "error": str(exc)}
+                    failed[name] = str(exc)
 
-            return results
+            return {
+                "tools_run": len(succeeded) + len(failed),
+                "succeeded": len(succeeded),
+                "failed": len(failed),
+                "failed_tools": failed,
+                "sqlite_tables": sorted(set(all_tables)),
+            }
 
         job_id = job_registry.submit("windows_full_disk", _work())
         return JobSubmitted(
