@@ -29,7 +29,7 @@ _PLAN_PATH = os.environ.get("INVESTIGATION_PLAN_PATH", "investigation_plan.json"
 _plan = InvestigationPlan(path=_PLAN_PATH)
 
 
-def register_investigation_tools(mcp: FastMCP) -> None:
+def register_tools(mcp: FastMCP) -> None:
     """Call once from forensics_mcp.py to register all planning tools."""
 
     # ------------------------------------------------------------------
