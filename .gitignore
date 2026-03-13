@@ -6,4 +6,5 @@ src/logs
 src/_pycache_
 src/mcp_tools/__pycache__
 src/mcp_tools/logs
+test/__pycache__
 
