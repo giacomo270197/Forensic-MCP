@@ -17,7 +17,11 @@ jobs:
        run: |
          python -m pip install --upgrade pip
          pip install -r requirements.txt
-     - name: Run MCP server
-       run: cd src && nohup python forensics_mcp.py --sse
+     - name: Run MCP server in background
+       run: |
+         cd src
+         nohup python forensics_mcp.py --sse > /tmp/forensics_mcp.log 2>&1 &
+         echo $! > /tmp/mcp.pid
+         sleep 5
      - name: Run tests
-       run: sleep 10 && cd test && pytest
+       run: cd test && pytest
