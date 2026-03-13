@@ -180,7 +180,13 @@ After running an investigation, `.output/` contains:
 
 ## Example output
 
-See [`Examples/report.md`](Examples/report.md) for a full investigation report from a ransomware case, including attack timeline, IOCs, and MITRE ATT&CK mapping.
+See [`Examples/Reports/cfreds_2022_red_petya.md`](Examples/Reports/cfreds_2022_red_petya.md) for a full investigation report from a ransomware case, including attack timeline, IOCs, and MITRE ATT&CK mapping.
+
+## Prompts
+
+See [`Examples/LLM Prompts`](Examples/LLM Prompts) for examples of different prompting to explain the LLM how it should perform its work. Please note these are tested with Claude Code.   
+The server should be able to perform a wide variety of forensic tasks. Different explanation prompts might be needed to tackle different problems (eg. Windows Server full disk analysis vs GitHub audit logs review).    
+I aim at providing templates, at least, for the most common tasks an analyst might run into.
 
 ## Tests
 
