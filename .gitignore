@@ -3,4 +3,7 @@
 .claude
 .vscode
 src/logs
-src/mcp_tools/_pycache_
+src/_pycache_
+src/mcp_tools/__pycache__
+src/mcp_tools/logs
+
