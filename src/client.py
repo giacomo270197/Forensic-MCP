@@ -14,7 +14,7 @@ async def main():
         # List available operations
         #tools = await client.list_tools()
         #result = await client.call_tool("windows_full_disk", {"path": "G:"})
-        result = await client.call_tool("get_job_status", {"job_id": "4f8d1588"})
+        result = await client.call_tool("get_job_status", {"job_id": "e54eab1a"})
         print(result)
 
 asyncio.run(main())

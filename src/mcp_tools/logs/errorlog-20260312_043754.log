@@ -1,0 +1,2 @@
+user input: C:\Users\giacomo\Desktop\Forensic-MCP\tools\hayabusa\hayabusa.exe csv-timeline -d G:\Windows\Sytem32\winevt\Logs -w -U -o C:\Users\giacomo\Desktop\Forensic-MCP\.output\hayabusa\evtx_hayabusa.csv
+[ERROR] The system cannot find the path specified. (os error 3)
