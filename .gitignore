@@ -2,3 +2,5 @@
 !.output/
 .claude
 .vscode
+src/logs
+src/mcp_tools/_pycache_
