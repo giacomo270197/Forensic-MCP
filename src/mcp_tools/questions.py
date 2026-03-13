@@ -19,16 +19,29 @@ def register_tools(mcp, output_dir):
         hypothesis:     str,
         evidence_hints: list[str],
         priority:       int = 3,
-        parent_id:      str = "",
+        goal_id:        str = "",
     ) -> dict:
         """
         Submit an investigative question directly to the parser agent
         responsible for the first artefact in evidence_hints.
 
-        For questions that span multiple artefacts, call submit_question
-        once per artefact with the same parent_id. Then poll
-        check_children(parent_id) until all are answered and coalesce
-        the answers yourself.
+        goal_id ties questions to the investigation plan
+        ------------------------------------------------
+        Every question should be submitted with a goal_id taken from the
+        active phase (get_current_phase → goals[n].id). This serves two
+        purposes simultaneously:
+
+          1. Groups questions targeting the same goal so you can call
+             check_children(goal_id) to know when all are answered.
+
+          2. Links questions to the structured investigation plan so that
+             after coalescing you can call complete_goal(goal_id, notes=...).
+
+        For a goal that requires evidence from multiple artefacts, call
+        submit_question once per artefact — always passing the same goal_id.
+        When check_children(goal_id) returns ready=true, read all answers
+        with get_question(), coalesce your finding, then call
+        complete_goal(goal_id, notes="<finding>").
 
         Parameters
         ----------
@@ -45,9 +58,10 @@ def register_tools(mcp, output_dir):
             RecycleBin, SRUM, RecentFileCache, Defender
         priority:
             1=critical, 3=normal (default), 5=low
-        parent_id:
-            Optional. Set the same parent_id on multiple questions to
-            group them for coalescing via check_children().
+        goal_id:
+            The goal ID from the active investigation phase. Get it from
+            get_current_phase() → goals[n].id. All questions sharing a
+            goal_id are monitored together via check_children(goal_id).
         """
         if not evidence_hints:
             return {
@@ -73,21 +87,22 @@ def register_tools(mcp, output_dir):
             depth          = 0,
             assigned_role  = assigned_role,
             output_dir     = output_dir,
-            parent_id      = parent_id or None,
+            parent_id      = goal_id or None,  # goal_id IS the parent_id
         )
         return {
             "question_id":   q.question_id,
             "assigned_role": q.assigned_role,
-            "parent_id":     q.parent_id,
+            "goal_id":       q.parent_id,      # surface as goal_id to the Interviewer
             "status":        q.status,
             "message": (
                 f"Question '{q.question_id}' queued for {assigned_role}. "
                 + (
-                    f"Group parent_id='{q.parent_id}' has "
+                    f"Goal '{q.parent_id}' now has "
                     f"{len(question_queue.list_all(output_dir, parent_id=q.parent_id))} "
-                    f"question(s). Call check_children('{q.parent_id}') to monitor."
+                    f"question(s). Call check_children('{q.parent_id}') to monitor, "
+                    f"then complete_goal('{q.parent_id}', notes=...) when ready."
                     if q.parent_id else
-                    "Call list_questions(status='answered') to read the answer."
+                    "No goal_id set — call get_question() to read the answer."
                 )
             ),
         }
@@ -192,12 +207,16 @@ def register_tools(mcp, output_dir):
     @mcp.tool()
     def check_children(parent_id: str) -> dict:
         """
-        Check whether all questions submitted with a given parent_id are
-        answered or failed. Used by the Interviewer to know when it can
-        coalesce answers.
+        Check whether all questions submitted with a given goal_id are
+        answered or failed.
 
-        When ready=true, call get_question(<child_id>) for each child
-        to read the full answers, then write a consolidated finding.
+        goal_id and parent_id are the same value. Pass the goal ID from
+        get_current_phase() → goals[n].id directly here.
+
+        When ready=true:
+          1. Call get_question(<child_id>) for each child to read full answers.
+          2. Coalesce the findings into a one-line summary.
+          3. Call complete_goal(goal_id, notes="<summary>") to advance the plan.
         """
         all_done = question_queue.all_children_answered(parent_id, output_dir)
         children = question_queue.list_all(output_dir, parent_id=parent_id)
