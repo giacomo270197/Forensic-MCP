@@ -3,8 +3,9 @@
 .claude
 .vscode
 src/logs
-src/_pycache_
+src/_pycache__
 src/mcp_tools/__pycache__
 src/mcp_tools/logs
 test/__pycache__
+tools/hayabusa
 
