@@ -24,7 +24,7 @@ import yaml
 from fastmcp import FastMCP
 from mcp_tools._jobs import registry as job_registry
 from mcp_tools._models import JobStatusResult, JobSubmitted
-from mcp_tools import findings, investigation, jobs_management, questions, tools, composite, sqlite
+from mcp_tools import findings, coordination_tools, jobs_management, tools, composite, sqlite
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -75,11 +75,10 @@ mcp = FastMCP(
 
 findings.register_tools(mcp, OUTPUT_DIR) 
 jobs_management.register_tools(mcp)
-questions.register_tools(mcp, OUTPUT_DIR) 
+coordination_tools.register_tools(mcp) 
 tools.register_tools(mcp, OUTPUT_DIR, TOOLS_CONFIG, Path(SERVER_DIR / "tools"))
 composite.register_tools(mcp, OUTPUT_DIR, TOOLS_CONFIG, Path(SERVER_DIR / "tools"))
 sqlite.register_tools(mcp, OUTPUT_DIR)
-investigation.register_tools(mcp)
 
 # ---------------------------------------------------------------------------
 # Tool: health_check  (always present, not in tools.yaml)

@@ -19,31 +19,27 @@ EXPECTED_TOOLS = {
     "get_job_status",
     "list_jobs",
     "cancel_job",
-    # questions.py
-    "submit_question",
-    "get_next_question",
-    "submit_answer",
-    "get_question",
-    "check_children",
     # sqlite.py
     "list_tables",
     "get_table_columns",
     "query_table",
+    # coordination_tools.py — Investigator tools
+    "open_task_queue",
+    "close_task_queue",
+    "create_hypothesis",
+    "update_hypothesis",
+    "list_hypotheses",
+    "create_task",
+    "get_investigation_state",
+    "get_pending_review",
+    "get_full_investigation_state",
+    "reset_investigation",
+    # coordination_tools.py — Worker tools
+    "claim_task",
+    "complete_task",
 }
 
-# Tools defined in investigation_tools.py (may or may not be registered)
-INVESTIGATION_TOOLS = {
-    "initialize_plan",
-    "get_plan_summary",
-    "get_current_phase",
-    "list_phases",
-    "add_goal",
-    "complete_goal",
-    "add_phase",
-    "skip_phase",
-}
-
-# Tools we deliberately exclude from testing
+# Tools we deliberately exclude from testing (require forensic executables)
 EXCLUDED_TOOLS = {
     # tools.py
     "run_hayabusa",
@@ -94,20 +90,3 @@ async def test_excluded_tools_exist_on_server(mcp):
         "None of the excluded tools found on server — "
         "check that the server is running with tools.yaml loaded."
     )
-
-
-@pytest.mark.asyncio
-async def test_investigation_tools_availability(mcp):
-    """Report whether investigation tools are registered (informational)."""
-    tools = await mcp.list_tools()
-    tool_names = {t.name for t in tools}
-
-    available = INVESTIGATION_TOOLS & tool_names
-    missing = INVESTIGATION_TOOLS - tool_names
-
-    if missing:
-        pytest.skip(
-            f"Investigation tools not registered: {missing}. "
-            "Call register_investigation_tools(mcp) in forensics_mcp.py to enable."
-        )
-    assert available == INVESTIGATION_TOOLS
