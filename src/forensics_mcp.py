@@ -24,7 +24,7 @@ import yaml
 from fastmcp import FastMCP
 from mcp_tools._jobs import registry as job_registry
 from mcp_tools._models import JobStatusResult, JobSubmitted
-from mcp_tools import findings, coordination_tools, jobs_management, tools, composite, sqlite
+from mcp_tools import findings, coordination_tools, jobs_management, tools, composite, sqlite, enrichment_apis
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -33,6 +33,7 @@ from mcp_tools import findings, coordination_tools, jobs_management, tools, comp
 SRC_DIR         = Path(__file__).parent
 SERVER_DIR      = SRC_DIR.parent
 CONFIG_FILE     = SERVER_DIR / "tools.yaml"
+APP_CONFIG_FILE = SERVER_DIR / "config.yaml"
 OUTPUT_DIR      = SERVER_DIR / ".output"
 STRATEGIES_FILE = SRC_DIR / "strategies.yaml"
 
@@ -52,7 +53,16 @@ def _load_config(config_path: Path) -> list[dict]:
     return tools
 
 
+def _load_app_config(config_path: Path) -> dict:
+    """Parse config.yaml and return the full config dict."""
+    if not config_path.exists():
+        return {}
+    with config_path.open(encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
 TOOLS_CONFIG: list[dict] = _load_config(CONFIG_FILE)
+APP_CONFIG: dict = _load_app_config(APP_CONFIG_FILE)
 
 # ---------------------------------------------------------------------------
 # Server setup
@@ -72,12 +82,13 @@ mcp = FastMCP(
 # Tool registry — all implementations live in mcp_tools/tools.py
 # ---------------------------------------------------------------------------
 
-findings.register_tools(mcp, OUTPUT_DIR) 
+findings.register_tools(mcp, OUTPUT_DIR)
 jobs_management.register_tools(mcp)
-coordination_tools.register_tools(mcp) 
+coordination_tools.register_tools(mcp)
 tools.register_tools(mcp, OUTPUT_DIR, TOOLS_CONFIG, Path(SERVER_DIR / "tools"))
 composite.register_tools(mcp, OUTPUT_DIR, TOOLS_CONFIG, Path(SERVER_DIR / "tools"))
 sqlite.register_tools(mcp, OUTPUT_DIR)
+enrichment_apis.register_tools(mcp, APP_CONFIG)
 
 # ---------------------------------------------------------------------------
 # Tool: health_check  (always present, not in tools.yaml)

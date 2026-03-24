@@ -10,4 +10,4 @@ test/__pycache__
 tools/hayabusa
 src/client.py
 CLAUDE.md
-
+config.yaml

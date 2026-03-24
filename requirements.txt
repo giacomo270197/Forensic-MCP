@@ -5,3 +5,5 @@ pydantic
 pytest
 pytest_asyncio
 PyYAML
+langchain-core
+langchain-ollama

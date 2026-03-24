@@ -1,9 +1,14 @@
-import csv
+import csv, json
 import re
 from datetime import datetime
 from pathlib import Path
 import re
 from datetime import datetime
+from typing import List, Sequence
+from langchain_core.documents import Document
+from langchain_core.documents.compressor import BaseDocumentCompressor
+from langchain_core.callbacks import Callbacks
+from langchain_ollama import ChatOllama
 
 def remove_prefix_timestamp(s: str) -> str:
     m = re.match(r'^(\d{8})(.*)', s)
@@ -141,3 +146,72 @@ def infer_create_table_from_csv(csv_path, table_name=None, sample_size=1000):
 
     create_stmt = f'CREATE TABLE "{table_name}" (\n' + ",\n".join(column_defs) + "\n);"
     return create_stmt
+
+def extract_json(text: str):
+    """
+    Extract and return the first valid JSON object or array from a string.
+    Raises ValueError if no valid JSON is found.
+    """
+
+    # Fast path: already valid JSON
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    start_chars = ['{', '[']
+
+    for start_char in start_chars:
+        start_idx = text.find(start_char)
+        if start_idx == -1:
+            continue
+
+        stack = []
+        for i in range(start_idx, len(text)):
+            char = text[i]
+
+            if char in '{[':
+                stack.append(char)
+
+            elif char in '}]':
+                if not stack:
+                    break
+                stack.pop()
+
+                if not stack:
+                    candidate = text[start_idx:i+1]
+                    try:
+                        return json.loads(candidate)
+                    except json.JSONDecodeError:
+                        break
+
+    raise ValueError("No valid JSON found in input")
+
+class JSONFieldCompressor(BaseDocumentCompressor):
+    llm: ChatOllama = None
+
+    def model_post_init(self, compression_model , __context):
+        if self.llm is None:
+            self.llm = ChatOllama(
+                model=compression_model,
+                base_url="http://localhost:11434",
+            )
+
+    def compress_documents(
+        self,
+        documents: Sequence[Document],
+        query: str,
+        callbacks: Callbacks | None = None,
+    ) -> List[Document]:
+        compressed = []
+        for doc in documents:
+            result = self.llm.invoke(
+                f"""{query}
+
+Return only a compact JSON object with the relevant fields, no preamble or explanation.
+
+Input:
+{doc.page_content}"""
+            )
+            compressed.append(Document(page_content=result.content))
+        return compressed

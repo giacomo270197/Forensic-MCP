@@ -173,7 +173,7 @@ Add to your `claude_desktop_config.json`:
    ```yaml
    - name: MyTool
      mcp_tool: run_mytool
-     executable: "path/to/executable"
+     executable: "path/to/executable" # If one exists
      description: What it does
    ```
 2. Add the implementation to `src/mcp_tools/tools.py` inside `build_tool_registry()`

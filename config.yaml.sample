@@ -1,0 +1,4 @@
+compression_model: "mistral"
+api_keys:
+  malware_bazaar: ""   # abuse.ch MalwareBazaar API key
+  abusedb: ""  # AbuseDB API key
