@@ -49,10 +49,12 @@ The tools are meant to be easy to plug in and expose via MCP so this can be exte
    |  ...                │
    └─────────────────────┘
 ```
+Questions are the end goals of this investigation. They are defined by the
+user before the investigation begins and do not change during it. 
 
-The orchestrator is responsible for generating an investigation plan, add goals to it, come up with hypothesis, and create specific questions to validate such hypothesis. The orchestrator never queries data itself, be it raw evidence, CSV/JSON outputs, or even the SQLite database.
+The Investigator agent is responsible for generating an investigation plan, come up with Hypothesis to answer Questions posed by the user, and create specific Tasks to validate such Hypothesis. The Investigator never queries data itself, be it raw evidence, CSV/JSON outputs, or even the SQLite database.
 
-A questions queue exist for the orchestrator to submit questions to subagents. Each subagent fetches questions meant for it, runs the required anaysis against the parsed data, and submit answers.
+A Tasks queue exist for the Investigator to submit Tasks to Workers subagents. Each Worker fetches Tasks meant for it, runs the required anaysis against the parsed data, and submit answers.
 
 This **context isolation** pattern keeps the main conversation focused on investigation logic and helps preventing the LLM running into a greedy "parsing" mode.
 
@@ -71,18 +73,25 @@ pip install -r requirements.txt
 
 ### Run
 
-**stdio mode** (for Claude Desktop / Claude Code):
-```bash
-python src/forensics_mcp.py
-```
-
-**SSE mode** (HTTP, for testing or remote clients):
+**SSE mode** (HTTP, for testing or remote clients, Preferred):
 ```bash
 python src/forensics_mcp.py --sse
 # Listening on http://127.0.0.1:8000/sse
 ```
 
-### Claude Desktop configuration
+**stdio mode** (for Claude Desktop / Claude Code):
+```bash
+python src/forensics_mcp.py
+```
+
+### Configure Claude CLI/Desktop
+
+**SSE mode**
+```
+claude mcp add --transport sse myserver http://127.0.0.1:8000/sse
+```
+
+**Claude Desktop configuration (stdio mode)**
 
 Add to your `claude_desktop_config.json`:
 
@@ -121,7 +130,7 @@ Add to your `claude_desktop_config.json`:
 
 | Tool | Description |
 |------|-------------|
-| `windows_full_disk` | Runs all parsers in parallel against a mounted disk image |
+| `windows_full_disk` | Runs all parsers meant for Windows disk images in parallel against a mounted disk image |
 
 ### Analysis & reporting
 
@@ -144,10 +153,19 @@ Add to your `claude_desktop_config.json`:
 
 | Tool | Description |
 |------|-------------|
-| `initialize_plan` | Create investigation with phased goals |
-| `get_plan_summary` | High-level investigation status |
-| `submit_question` | Route questions to specialized parser agents |
 | `health_check` | Verify all tool binaries are present |
+| `create_hypothesis` | Create a hypothesis to investigate |
+| `list_hypotheses` | List all hypotheses and their status |
+| `update_hypothesis` | Update a hypothesis with new findings |
+| `create_task` | Submit a task to the worker queue |
+| `claim_task` | Claim a pending task for processing |
+| `complete_task` | Mark a task as completed with results |
+| `get_pending_review` | Retrieve tasks awaiting review |
+| `open_task_queue` | Open the task queue for workers |
+| `close_task_queue` | Close the task queue |
+| `list_jobs` | List all background jobs |
+| `get_job_status` | Check the status of a background job |
+| `cancel_job` | Cancel a running background job |
 
 ## Adding a new tool
 
@@ -155,7 +173,7 @@ Add to your `claude_desktop_config.json`:
    ```yaml
    - name: MyTool
      mcp_tool: run_mytool
-     executable: "net9/MyTool.exe"
+     executable: "path/to/executable"
      description: What it does
    ```
 2. Add the implementation to `src/mcp_tools/tools.py` inside `build_tool_registry()`
@@ -180,11 +198,11 @@ After running an investigation, `.output/` contains:
 
 ## Example output
 
-See [`Examples/Reports/cfreds_2022_red_petya.md`](Examples/Reports/cfreds_2022_red_petya.md) for a full investigation report from a ransomware case, including attack timeline, IOCs, and MITRE ATT&CK mapping.
+See [`Examples/Reports/cfreds_2022_red_petya.md`](Examples/Reports/cfreds_2022_red_petya.md) for a full investigation report from a ransomware case, including attack timeline, IOCs, and MITRE ATT&CK mapping. [`Examples/Reports/cfreds_2022_red_petya_follow_up_questions.md`](Examples/Reports/cfreds_2022_red_petya_follow_up_questions.md) is a report for the same incident, but with data appended after follow up questions regarding the malware executables and IOCs. 
 
 ## Prompts
 
-See [`Examples/LLM Prompts`](Examples/LLM Prompts) for examples of different prompting to explain the LLM how it should perform its work. Please note these are tested with Claude Code.   
+See [`Examples/LLM Prompts`](`Examples/LLM_Prompts) for examples of different prompting to explain the LLM how it should perform its work. Please note these are tested with Claude Code.   
 The server should be able to perform a wide variety of forensic tasks. Different explanation prompts might be needed to tackle different problems (eg. Windows Server full disk analysis vs GitHub audit logs review).    
 I aim at providing templates, at least, for the most common tasks an analyst might run into.
 
