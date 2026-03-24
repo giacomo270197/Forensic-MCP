@@ -53,7 +53,6 @@ def _load_config(config_path: Path) -> list[dict]:
 
 
 TOOLS_CONFIG: list[dict] = _load_config(CONFIG_FILE)
-print(TOOLS_CONFIG)
 
 # ---------------------------------------------------------------------------
 # Server setup

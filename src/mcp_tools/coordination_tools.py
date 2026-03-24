@@ -53,7 +53,7 @@ def register_tools(mcp: FastMCP):
         Returns the created hypothesis including its assigned id.
         """
         h = get_state().create_hypothesis(question_id=question_id, statement=statement)
-        return {
+        hypothesis = {
             "id": h.id,
             "question_id": h.question_id,
             "statement": h.statement,
@@ -61,6 +61,8 @@ def register_tools(mcp: FastMCP):
             "supporting_task_ids": h.supporting_task_ids,
             "refuting_task_ids": h.refuting_task_ids,
         }
+        print(hypothesis)
+        return hypothesis
 
     @mcp.tool()
     def update_hypothesis(
@@ -92,7 +94,7 @@ def register_tools(mcp: FastMCP):
             new_statement=new_statement,
             new_status=new_status,
         )
-        return {
+        hypothesis = {
             "id": h.id,
             "question_id": h.question_id,
             "statement": h.statement,
@@ -101,6 +103,8 @@ def register_tools(mcp: FastMCP):
             "refuting_task_ids": h.refuting_task_ids,
             "updated_at": h.updated_at,
         }
+        print(hypothesis)
+        return hypothesis
 
     @mcp.tool()
     def list_hypotheses(question_id: str | None = None) -> list[dict]:
@@ -153,31 +157,15 @@ def register_tools(mcp: FastMCP):
             description=description,
             task_type=task_type,
         )
-        return {
+        task = {
             "id": t.id,
             "hypothesis_id": t.hypothesis_id,
             "description": t.description,
             "task_type": t.task_type,
             "status": t.status,
         }
-
-    @mcp.tool()
-    def get_investigation_state() -> dict:
-        """
-        Return a lightweight summary of the investigation's current state.
-
-        Returns task counts by status, all open (unresolved) hypotheses with
-        their supporting/refuting evidence counts, and whether the queue is open.
-
-        Use this to orient yourself or check overall progress. To read the
-        actual results of completed tasks, call get_pending_review() instead —
-        it returns only what is new since your last review and is far cheaper
-        on context.
-
-        For a full raw dump of all state (debugging / final report), call
-        get_full_investigation_state().
-        """
-        return get_state().get_summary()
+        print(task)
+        return task
 
     @mcp.tool()
     def get_pending_review() -> dict:
@@ -200,30 +188,6 @@ def register_tools(mcp: FastMCP):
         """
         return get_state().get_pending_review()
 
-    @mcp.tool()
-    def get_full_investigation_state() -> dict:
-        """
-        Return the complete raw state: all hypotheses and all tasks.
-
-        Use sparingly — this dumps everything and will be large in a
-        non-trivial investigation. Prefer get_investigation_state() for
-        progress checks and get_pending_review() for reading results.
-
-        Useful for: producing a final report, debugging unexpected state,
-        or resuming an investigation after a context reset.
-        """
-        return get_state().get_full_state()
-
-    @mcp.tool()
-    def reset_investigation() -> dict:
-        """
-        Wipe all hypotheses, tasks, and queue state and start fresh.
-
-        Also closes the task queue. Use at the beginning of a new case.
-        Does not affect the Questions defined in the prompt.
-        """
-        get_state().reset()
-        return {"status": "ok", "message": "Investigation state cleared."}
 
     # ── Worker tools ───────────────────────────────────────────────────────
 
@@ -309,10 +273,12 @@ def register_tools(mcp: FastMCP):
             evidence=evidence,
             assessment=assessment,
         )
-        return {
+        response = {
             "id": t.id,
             "hypothesis_id": t.hypothesis_id,
             "status": t.status,
             "result": t.result,
             "completed_at": t.completed_at,
         }
+        print(response)
+        return response

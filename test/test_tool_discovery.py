@@ -30,10 +30,7 @@ EXPECTED_TOOLS = {
     "update_hypothesis",
     "list_hypotheses",
     "create_task",
-    "get_investigation_state",
     "get_pending_review",
-    "get_full_investigation_state",
-    "reset_investigation",
     # coordination_tools.py — Worker tools
     "claim_task",
     "complete_task",
